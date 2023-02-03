@@ -79,23 +79,31 @@ const Footer = () => {
 }
 
 function App() {
-  let isFirstScroll = false
+  let scrollDirection = 'down'
+  let lastScroll = 0
 
-  window.addEventListener('scroll', function(e) {
-    e.preventDefault()
+  window.addEventListener('scroll', function() {
+    const currentScroll = window.scrollY + window.innerHeight
+    scrollDirection = currentScroll > lastScroll ? 'down' : 'up'
+    lastScroll = currentScroll
+
     if (document.getElementsByClassName("section-carousel")) {
-      const body = document.querySelector('body')
-      const sectionCarousel = document.getElementsByClassName("section-carousel")[0]
+      const body = document.querySelector("body")
 
-      const currentScroll = window.scrollY + window.innerHeight
-      const sectionCarouselBottom = sectionCarousel.offsetTop + sectionCarousel.offsetHeight
-      
-      if (sectionCarouselBottom <= currentScroll && !isFirstScroll) {
+      if (currentScroll >= 2400 && currentScroll <= 2500) {
         body.style.overflow = 'hidden'
-
         const carousel = document.getElementsByClassName("carousel")[0]
+        let isAtEnd = Math.round(carousel.scrollLeft + carousel.offsetWidth) >= carousel.scrollWidth
+        let isAtStart = carousel.scrollLeft === 0 ? true : false
+        let scroll
+        if (isAtEnd) {
+          scroll = carousel.scrollWidth
+        } else if (isAtStart) {
+          scroll = 0
+        } else {
+          scroll = carousel.scrollLeft + carousel.offsetWidth
+        }
 
-        let scroll = 0
         const handleWheel = (e) => {
           if (e.deltaY > 0) {
             carousel.scrollTo({
@@ -103,23 +111,31 @@ function App() {
               top: 0,
               behavior: 'smooth'
             })
+            if (isAtEnd) {
+              body.style.overflow = 'auto'
+              body.removeEventListener("wheel", handleWheel)
+            }
           } else {
             carousel.scrollTo({
               left: scroll -=200,
               top: 0,
               behavior: 'smooth'
             })
+            if (isAtStart) {
+              body.style.overflow = 'auto'
+              body.removeEventListener("wheel", handleWheel)
+            }
           }
-   
-          const isAtEnd = Math.round(carousel.scrollLeft + carousel.offsetWidth) >= carousel.scrollWidth
-          if (isAtEnd) {
+          isAtEnd = Math.round(carousel.scrollLeft + carousel.offsetWidth) >= carousel.scrollWidth
+          isAtStart = carousel.scrollLeft === 0 ? true : false
+
+          if ((isAtEnd && scrollDirection === 'down') || (isAtStart && scrollDirection === 'up')) {
             body.style.overflow = 'auto'
-            isFirstScroll = true
-            body.removeEventListener("wheel", handleWheel)
+            body.removeEventListener('wheel', handleWheel)
           }
         }
         body.addEventListener('wheel', handleWheel)
-      }
+      }   
     }
   })
   
